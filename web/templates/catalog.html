@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ shop.name }} catalog — Teleshop{% endblock %}
+{% block body %}
+<h1>{{ shop.name or shop.shop_id }}</h1>
+{% with tab='catalog' %}{% include "_tabs.html" %}{% endwith %}
+
+{% if not settings.account_number %}
+<div class="notice">
+  Customers can't pay yet — add your bank account in
+  <a href="/shop/{{ shop.shop_id }}/settings">Settings</a> first.
+</div>
+{% endif %}
+
+{% if not categories %}
+<div class="empty">
+  <p>Start with a category — something like Drinks, Shoes, or Medicine. Products go inside it.</p>
+</div>
+{% endif %}
+
+{% for c in categories %}
+<h2>{{ c.name }}</h2>
+{% for p in by_cat.get(c.id, []) %}
+<div class="card tight">
+  <div class="row">
+    <div class="grow">
+      <div style="font-weight:650">{{ p.title }}</div>
+      <div class="tiny">
+        {% if p.available %}<span class="badge ok">In stock</span>
+        {% else %}<span class="badge off">Hidden</span>{% endif %}
+        {% if p.media_file_ids %} · has photos{% endif %}
+      </div>
+    </div>
+    <div class="money">{{ p.price }} {{ settings.currency }}</div>
+  </div>
+  <div class="row" style="margin-top:10px; gap:8px">
+    <form class="inline" method="post" action="/shop/{{ shop.shop_id }}/product/{{ p.id }}/stock">
+      <button class="btn small ghost" type="submit">
+        {{ 'Hide from customers' if p.available else 'Put back in stock' }}
+      </button>
+    </form>
+    <form class="inline" method="post" action="/shop/{{ shop.shop_id }}/product/{{ p.id }}/delete"
+          onsubmit="return confirm('Delete {{ p.title }}? Past orders keep their own copy.')">
+      <button class="btn small danger" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<div class="tiny" style="margin-bottom:10px">Nothing in this category yet.</div>
+{% endfor %}
+{% endfor %}
+
+<h2>Add a product</h2>
+<div class="card">
+  {% if categories %}
+  <form method="post" action="/shop/{{ shop.shop_id }}/product" enctype="multipart/form-data">
+    <label>Category
+      <select name="category_id" required>
+        {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <div class="field-pair">
+      <div>
+        <label>Name
+          <input type="text" name="title" required maxlength="128" placeholder="Special Tibs">
+        </label>
+      </div>
+      <div>
+        <label>Price <span class="hint">({{ settings.currency }})</span>
+          <input type="number" name="price" required min="0" step="1" placeholder="310">
+        </label>
+      </div>
+    </div>
+    <label>Description <span class="hint">optional</span>
+      <textarea name="description" maxlength="1024" placeholder="What the customer gets."></textarea>
+    </label>
+    <label>Photos <span class="hint">optional — your own pictures</span>
+      <input type="file" name="photos" accept="image/*" multiple>
+    </label>
+    <p class="tiny">Photos are stored by Telegram, not on this server, so they load fast for customers and cost nothing to host.</p>
+    <button class="btn" type="submit" style="margin-top:14px">Add product</button>
+  </form>
+  {% else %}
+  <p class="muted">Add a category first.</p>
+  {% endif %}
+</div>
+
+<h2>Add a category</h2>
+<div class="card">
+  <form method="post" action="/shop/{{ shop.shop_id }}/category">
+    <div class="row" style="gap:8px">
+      <input type="text" name="name" required maxlength="64" placeholder="Drinks">
+      <button class="btn" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Your shops — Teleshop{% endblock %}
+{% block body %}
+<h1>Your shops</h1>
+<p class="sub">Pick a shop to edit its catalog, check orders, or change payment details.</p>
+
+{% if not shops %}
+<div class="empty">
+  <p>No shops here yet. Open the Telegram bot and send <b>/newshop</b> to create your first one — it takes about two minutes.</p>
+</div>
+{% endif %}
+
+{% for s in shops %}
+<div class="card">
+  <div class="row">
+    <div class="grow">
+      <div style="font-weight:700">{{ s.name or s.shop_id }}</div>
+      <div class="tiny">
+        {% if s.username %}@{{ s.username }}{% else %}bot not linked{% endif %}
+        {% if s.is_trial and s.subscription_end %}
+          · <span class="badge wait">Trial ends {{ s.subscription_end.strftime('%d %b') }}</span>
+        {% elif s.subscription_active %}
+          · <span class="badge ok">Active</span>
+        {% else %}
+          · <span class="badge bad">Paused</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if stats.get(s.shop_id) %}
+      <span class="badge wait">{{ stats[s.shop_id] }} to check</span>
+    {% endif %}
+  </div>
+  <div class="row" style="margin-top:12px; gap:8px">
+    <a class="btn small ghost" href="/shop/{{ s.shop_id }}">Catalog</a>
+    <a class="btn small ghost" href="/shop/{{ s.shop_id }}/orders">Orders</a>
+    <a class="btn small ghost" href="/shop/{{ s.shop_id }}/settings">Settings</a>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

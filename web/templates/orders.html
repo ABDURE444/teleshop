@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Orders — {{ shop.name }}{% endblock %}
+{% block body %}
+<h1>{{ shop.name or shop.shop_id }}</h1>
+{% with tab='orders' %}{% include "_tabs.html" %}{% endwith %}
+
+{% if refund_owed %}
+<div class="notice bad">
+  You're holding <b>{{ refund_owed }}</b> from cancelled orders that was never
+  returned. Send it back to the customers listed below — the app can't move money for you.
+</div>
+{% endif %}
+
+<div class="row" style="gap:8px; margin-bottom:16px">
+  <a class="btn small {{ 'ghost' if show != 'open' }}" href="?show=open">Open</a>
+  <a class="btn small {{ 'ghost' if show == 'open' }}" href="?show=all">All</a>
+</div>
+
+{% if not orders %}
+<div class="empty">
+  <p>{{ 'No open orders right now.' if show == 'open' else 'No orders yet.' }}
+     They appear here the moment a customer sends a payment screenshot.</p>
+</div>
+{% endif %}
+
+{% for o in orders %}
+<div class="card ticket">
+  <div class="row">
+    <div class="grow">
+      <div style="font-weight:700">#{{ o.id }} · {{ o.customer_name or o.customer_username or o.customer_id }}</div>
+      <div class="tiny">
+        {{ o.customer_phone or 'no phone' }} · collect {{ o.pickup_time or '—' }}
+        · {{ o.created_at.strftime('%d %b %H:%M') }}
+      </div>
+    </div>
+    {% if o.status == 'paid' %}<span class="badge ok">Paid</span>
+    {% elif o.status == 'fulfilled' %}<span class="badge off">Collected</span>
+    {% elif o.status == 'awaiting_topup' %}<span class="badge wait">Short</span>
+    {% elif o.status == 'awaiting_verification' %}<span class="badge wait">Check payment</span>
+    {% elif o.status == 'cancelled' %}<span class="badge bad">Cancelled</span>
+    {% else %}<span class="badge off">{{ o.status }}</span>{% endif %}
+  </div>
+
+  <div class="lines">
+    {% for i in items.get(o.id, []) %}
+      <div><span>{{ i.qty }}× {{ i.title }}</span><span class="money">{{ i.unit_price * i.qty }}</span></div>
+    {% else %}
+      {% if o.product_title %}<div><span>{{ o.quantity }}× {{ o.product_title }}</span><span class="money">{{ o.amount }}</span></div>{% endif %}
+    {% endfor %}
+    <div class="total"><span>Total</span><span class="money">{{ o.amount }} {{ o.currency }}</span></div>
+    {% if o.paid_total and o.paid_total != o.amount %}
+      <div class="tiny" style="margin-top:4px">Recorded so far: {{ o.paid_total }} {{ o.currency }}</div>
+    {% endif %}
+    {% if o.refund_owed %}
+      <div class="tiny" style="color:var(--rust); margin-top:4px">
+        Owed back to this customer: {{ o.refund_owed }} {{ o.currency }}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if o.status == 'paid' and o.pickup_code %}
+  <div class="perf">
+    <div class="code">{{ o.pickup_code }}</div>
+    <div class="grow tiny">Customer says this code at your counter.</div>
+    <form class="inline" method="post" action="/shop/{{ shop.shop_id }}/order/{{ o.id }}/collected">
+      <input type="hidden" name="show" value="{{ show }}">
+      <button class="btn small" type="submit">Mark collected</button>
+    </form>
+  </div>
+  {% elif o.status == 'fulfilled' and o.pickup_code %}
+  <div class="perf">
+    <div class="code" style="color:var(--ink-faint)">{{ o.pickup_code }}</div>
+    <div class="grow tiny">Collected{% if o.collected_at %} {{ o.collected_at.strftime('%d %b %H:%M') }}{% endif %}.</div>
+  </div>
+  {% elif o.status in ('awaiting_verification', 'awaiting_topup') %}
+  <div class="perf">
+    <div class="grow tiny">Confirm this one from the Telegram order card — the payment screenshot is attached there.</div>
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

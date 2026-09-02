@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Settings — {{ shop.name }}{% endblock %}
+{% block body %}
+<h1>{{ shop.name or shop.shop_id }}</h1>
+{% with tab='settings' %}{% include "_tabs.html" %}{% endwith %}
+
+{% if saved %}<div class="notice good">Settings saved.</div>{% endif %}
+
+{% if shop.is_trial and shop.subscription_end %}
+<div class="notice">
+  Free trial — your shop stays live until <b>{{ shop.subscription_end.strftime('%d %B %Y') }}</b>.
+  After that, send <b>/subscribe</b> to the Telegram bot to continue for
+  {{ price_stars }} Stars a year.
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/shop/{{ shop.shop_id }}/settings">
+    <h2 style="margin-top:0">Where customers pay</h2>
+    <p class="tiny">Customers see the account name before they send money, so type it exactly as your bank shows it.</p>
+    <div class="field-pair">
+      <div><label>Bank or wallet
+        <input type="text" name="bank_name" maxlength="64" value="{{ settings.bank_name or '' }}" placeholder="CBE">
+      </label></div>
+      <div><label>Currency
+        <input type="text" name="currency" maxlength="8" value="{{ settings.currency or 'ETB' }}">
+      </label></div>
+    </div>
+    <label>Account name
+      <input type="text" name="account_name" maxlength="128" value="{{ settings.account_name or '' }}" placeholder="SELAM KITFO BET">
+    </label>
+    <label>Account number
+      <input type="text" name="account_number" maxlength="64" value="{{ settings.account_number or '' }}" placeholder="1000234567890">
+    </label>
+
+    <h2>Collection</h2>
+    <label>Pickup address <span class="hint">shown with the pickup code</span>
+      <input type="text" name="pickup_address" maxlength="256" value="{{ settings.pickup_address or '' }}" placeholder="Bole Medhanialem, next to the pharmacy">
+    </label>
+    <label>Cancel unfinished part-payments after <span class="hint">minutes</span>
+      <input type="number" name="topup_timeout_minutes" min="5" step="5" value="{{ settings.topup_timeout_minutes or 60 }}">
+    </label>
+    <p class="tiny">When a customer pays part of the total and never sends the rest, the order is cancelled after this long and the amount they did send is recorded as owed back to them.</p>
+
+    <h2>Extra notes</h2>
+    <label>Anything else customers should read <span class="hint">optional</span>
+      <textarea name="payment_instructions" maxlength="1024" placeholder="Send the screenshot right after paying.">{{ settings.payment_instructions or '' }}</textarea>
+    </label>
+
+    <button class="btn" type="submit" style="margin-top:18px">Save changes</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Teleshop{% endblock %}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="topbar">
+  <a href="/" class="brand">Teleshop</a>
+  {% if user %}<span class="who">{{ user.name }}</span>
+  <a href="/logout" class="who">Sign out</a>{% endif %}
+</div>
+<div class="wrap">{% block body %}{% endblock %}</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sign in — Teleshop{% endblock %}
+{% block body %}
+<h1>Sign in</h1>
+<p class="sub">Use the same Telegram account that owns your shop. There is no password to remember.</p>
+{% if error %}<div class="notice bad">{{ error }}</div>{% endif %}
+<div class="card">
+  {% if bot_username %}
+  <script async src="https://telegram.org/js/telegram-widget.js?22"
+          data-telegram-login="{{ bot_username }}"
+          data-size="large"
+          data-userpic="false"
+          data-auth-url="{{ base_url }}/auth/telegram"
+          data-request-access="write"></script>
+  <p class="tiny" style="margin-top:14px">
+    The button not loading? Your dashboard domain must be registered with
+    @BotFather using <code>/setdomain</code> for this bot.
+  </p>
+  {% else %}
+  <p class="muted">The master bot username hasn't loaded yet. Restart the server and reload this page.</p>
+  {% endif %}
+</div>
+{% endblock %}
