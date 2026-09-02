@@ -1,3 +1,26 @@
+## Quick deploy (fresh Ubuntu 22.04 / 24.04 server)
+
+Point your domain at the server first, then:
+
+```bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/YOURNAME/teleshop.git
+cd teleshop
+sudo bash install.sh
+```
+
+It asks for your domain, master bot token, Telegram ID and currency, then does
+everything else: packages, PostgreSQL, Redis, firewall, Python environment,
+HTTPS via Caddy, the systemd service and a nightly backup. Takes about ten
+minutes, most of it waiting for downloads.
+
+One manual step remains afterwards — message @BotFather, send `/setdomain`,
+pick your master bot, and send your domain. Telegram login will not work until
+you do. The installer prints this reminder when it finishes.
+
+Re-running `install.sh` is safe: every step checks whether it has already been
+done, and an existing `.env` is left alone.
+
 # Teleshop v2.2
 
 Multi-tenant Telegram commerce for any shop — products, cart, collection time,
